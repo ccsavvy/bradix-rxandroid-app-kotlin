@@ -83,8 +83,8 @@ class AlbumActivity : AppCompatActivity() {
             val picasso: Picasso = Picasso.get()
             picasso.isLoggingEnabled = true
 
-            picasso.load(photo.thumbnailUrl!!)
-                .resize(150, 150).centerCrop().into(thumbNail)
+            picasso.load(photo.url!!)
+                .resize(600, 600).centerCrop().into(thumbNail)
 
             title.text = photo.title!!
             albumId.text = "Album id: #${photo.albumId!!}"
