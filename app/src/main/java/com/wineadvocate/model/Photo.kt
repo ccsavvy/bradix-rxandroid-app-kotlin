@@ -4,9 +4,9 @@ package com.wineadvocate.model
  *  Created by Christian on Wednesday Mar, 2019
  */
 
-class Photo(name: String, thumbnail: String) {
+class Photo(title: String, thumbnailUrl: String) {
 
-    var name:String?= name
-    var thumbnail:String? = thumbnail
+    var title:String?= title
+    var thumbnailUrl:String? = thumbnailUrl
 
 }

@@ -12,7 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.squareup.picasso.Picasso
-import com.wineadvocate.model.DataClassPhoto
+import com.wineadvocate.model.Photo
 import com.wineadvocate.network.RequestInterface
 import com.wineadvocate.network.ServiceGenerator
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -21,7 +21,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private var listOfDataClassPhotos = ArrayList<DataClassPhoto>()
+    private var listOfDataClassPhotos = ArrayList<Photo>()
     private var adapter:DataClassPhotoAdapter?= null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,21 +39,21 @@ class MainActivity : AppCompatActivity() {
             .subscribeOn(Schedulers.io())
             .subscribe(
                 { listOfDataClassPhotos ->
-                    handleResponse(listOfDataClassPhotos = listOfDataClassPhotos as ArrayList<DataClassPhoto>)
+                    handleResponse(listOfDataClassPhotos = listOfDataClassPhotos as ArrayList<Photo>)
                 },
                 { error -> handleError(error) }
             )
 
 //        Sample data
-//        listOfDataClassPhotos.add(DataClassPhoto("https://via.placeholder.com/150/92c952", "Title A"))
-//        listOfDataClassPhotos.add(DataClassPhoto("https://via.placeholder.com/150/92c952", "Title B"))
-//        listOfDataClassPhotos.add(DataClassPhoto("https://via.placeholder.com/150/92c952", "Title C"))
+//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title A"))
+//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title B"))
+//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title C"))
 //        adapter = DataClassPhotoAdapter(this, listOfDataClassPhotos)
 //        listview.adapter = adapter
 
     }
 
-    private fun handleResponse(listOfDataClassPhotos: ArrayList<DataClassPhoto>) {
+    private fun handleResponse(listOfDataClassPhotos: ArrayList<Photo>) {
 
         adapter = DataClassPhotoAdapter(this, listOfDataClassPhotos)
         listview.adapter = adapter
@@ -66,9 +66,9 @@ class MainActivity : AppCompatActivity() {
     class DataClassPhotoAdapter: BaseAdapter {
 
         private var context: Context?= null
-        private var listOfDataClassPhotos = ArrayList<DataClassPhoto>()
+        private var listOfDataClassPhotos = ArrayList<Photo>()
 
-        constructor(context:Context, listOfDataClassPhoto: ArrayList<DataClassPhoto>): super() {
+        constructor(context:Context, listOfDataClassPhoto: ArrayList<Photo>): super() {
             this.context = context
             this.listOfDataClassPhotos = listOfDataClassPhoto
         }
@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity() {
             val picasso: Picasso = Picasso.get()
             picasso.isLoggingEnabled = true
 
-            picasso.load(photo.url!!)
+            picasso.load(photo.thumbnailUrl!!)
                 .resize(150, 150).centerCrop().into(thumbNail)
 
             title.text = photo.title!!
