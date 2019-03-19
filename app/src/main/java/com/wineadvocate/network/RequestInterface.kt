@@ -16,5 +16,5 @@ interface RequestInterface {
     fun getPhotos() : Observable<ArrayList<Photo>>
 
     @GET("/photos")
-    fun getAlbum(@Query("albumId") albumId : String) : Observable<List<DataClassPhoto>>
+    fun getAlbum(@Query("albumId") albumId : String) : Observable<ArrayList<DataClassPhoto>>
 }
