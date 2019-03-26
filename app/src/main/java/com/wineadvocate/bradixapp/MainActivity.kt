@@ -40,8 +40,8 @@ class MainActivity : AppCompatActivity() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeOn(Schedulers.io())
             .subscribe(
-                { listofPhotos ->
-                    handleResponse(listofPhotos = listofPhotos as ArrayList<Photo>)
+                { listOfPhotos ->
+                    handleResponse(listofPhotos = listOfPhotos as ArrayList<Photo>)
                 },
                 { error -> handleError(error) }
             )
@@ -68,17 +68,17 @@ class MainActivity : AppCompatActivity() {
     class DataClassPhotoAdapter: BaseAdapter {
 
         private var context: Context?= null
-        private var listofPhotos = ArrayList<Photo>()
+        private var listOfPhotos = ArrayList<Photo>()
 
         constructor(context:Context, listOfDataClassPhoto: ArrayList<Photo>): super() {
             this.context = context
-            this.listofPhotos = listOfDataClassPhoto
+            this.listOfPhotos = listOfDataClassPhoto
         }
 
         @SuppressLint("ViewHolder", "SetTextI18n")
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 
-            val photo = listofPhotos[position]
+            val photo = listOfPhotos[position]
             var photoView = LayoutInflater.from(context).inflate(R.layout.photos, parent, false)
 
             val thumbNail = photoView.findViewById(R.id._thumb_nail) as ImageView
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun getItem(position: Int): Any {
-            return listofPhotos[position]
+            return listOfPhotos[position]
         }
 
         override fun getItemId(position: Int): Long {
@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun getCount(): Int {
-            return listofPhotos.size
+            return listOfPhotos.size
         }
     }
 }

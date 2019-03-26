@@ -70,7 +70,7 @@ class AlbumActivity : AppCompatActivity() {
             this.listOfDataClassPhotos = listOfDataClassPhoto
         }
 
-        @SuppressLint("ViewHolder")
+        @SuppressLint("ViewHolder", "SetTextI18n")
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 
             val photo = listOfDataClassPhotos[position]
