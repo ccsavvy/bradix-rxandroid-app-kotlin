@@ -14,8 +14,8 @@ import com.hannesdorfmann.mosby3.mvi.MviActivity
 import com.squareup.picasso.Picasso
 import com.wineadvocate.domain.AlbumViewState
 import com.wineadvocate.model.DataClassPhoto
-import io.reactivex.Observable
-import kotlinx.android.synthetic.main.activity_main.*
+import io.reactivex.subjects.PublishSubject
+import kotlinx.android.synthetic.main.activity_album.*
 
 /**
  *  Created by Christian on Tuesday Mar, 2019
@@ -25,11 +25,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 class AlbumActivity : MviActivity<AlbumsView, AlbumsPresenter>(), AlbumsView {
 
 
-    private var albumId: String? = null
+    private var albumId = PublishSubject.create<String>()
 
     override fun createPresenter() = AlbumsPresenter()
 
-    override fun loadAlbums(): Observable<String> = Observable.just(albumId)
+    override fun loadAlbums() = albumId
 
     override fun render(state: AlbumViewState) {
 
@@ -62,36 +62,14 @@ class AlbumActivity : MviActivity<AlbumsView, AlbumsPresenter>(), AlbumsView {
     @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_album)
 
         val bundle: Bundle = intent.extras
-        albumId = bundle.getString("albumId")
+        albumId.onNext(bundle.getString("albumId"))
 
-// @TODO: MVC architecture design (nisud here)
-//        ServiceGenerator
-//            .createAPIService(RequestInterface::class.java)
-//            .getAlbum(albumId)
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribeOn(Schedulers.io())
-//            .subscribe(
-//                { listOfDataClassPhotos ->
-//                    handleResponse(listOfDataClassPhotos = listOfDataClassPhotos as ArrayList<DataClassPhoto>)
-//                },
-//                { error -> handleError(error) }
-//            )
+        // @TODO: MVC architecture design (nisud here)
 
     }
-
-//    private fun handleResponse(listOfDataClassPhotos: ArrayList<DataClassPhoto>) {
-//
-//        adapter = PhotoAdapter(this, listOfDataClassPhotos)
-//        listview.adapter = adapter
-//    }
-//
-//    private fun handleError(error: Throwable) {
-//        Toast.makeText(this, "Error ${error.localizedMessage}", Toast.LENGTH_LONG).show()
-//    }
-
 
     inner class PhotoAdapter: BaseAdapter {
 

@@ -20,7 +20,7 @@ class AlbumsPresenter: MviBasePresenter<AlbumsView, AlbumViewState>() {
         val albumState : Observable<AlbumViewState>? = intent(AlbumsView::loadAlbums)
             .subscribeOn(Schedulers.io())
             .debounce(400, TimeUnit.MILLISECONDS)
-            .flatMap { GetAlbumUseCase.getAlbums("") }
+            .flatMap { GetAlbumUseCase.getAlbums(albumId = it) }
             .doOnNext { Timber.d("Received new state: %s", it)}
             .observeOn(AndroidSchedulers.mainThread())
 
