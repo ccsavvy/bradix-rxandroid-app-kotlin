@@ -1,6 +1,5 @@
-package com.wineadvocate.network
+package com.wineadvocate.repository
 
-import android.content.Context
 import android.util.Log
 import com.google.gson.GsonBuilder
 import com.wineadvocate.bradixapp.BuildConfig
@@ -34,7 +33,7 @@ object ServiceGenerator {
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
 
 
-    fun <S> createAPIService(serviceClass: Class<S>, context: Context): S {
+    fun <S> createAPIService(serviceClass: Class<S>): S {
 
         val interceptor = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger { message -> Log.d("OkHttp", message) })
 

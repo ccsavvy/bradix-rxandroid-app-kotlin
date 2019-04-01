@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,64 +12,77 @@ import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import com.hannesdorfmann.mosby3.mvi.MviActivity
+import com.jakewharton.rxbinding2.view.clicks
 import com.squareup.picasso.Picasso
-import com.wineadvocate.model.Photo
-import com.wineadvocate.network.RequestInterface
-import com.wineadvocate.network.ServiceGenerator
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import com.wineadvocate.domain.PhotoViewState
+import com.wineadvocate.model.DataClassPhoto
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : MviActivity<PhotosView, PhotosPresenter>(), PhotosView {
 
-    // private var listOfDataClassPhotos = ArrayList<Photo>()
-    private var adapter:DataClassPhotoAdapter?= null
+    private val itemClickSubject = PublishSubject.create<DataClassPhoto>()
+
+    override fun createPresenter() = PhotosPresenter()
+
+    override fun showAlbumByIdIntent(albumId: String) = itemClickSubject
+
+    override fun showPhotos() = Observable.just(true)!!
+
+    override fun render(state: PhotoViewState) {
+
+        when(state) {
+            is PhotoViewState.LoadingState -> renderLoadingState()
+            is PhotoViewState.DataState -> renderDataState(state)
+            is PhotoViewState.ErrorState -> renderErrorState(state)
+        }
+    }
+
+    private fun renderLoadingState() {
+        loadingIndicator.visibility = View.VISIBLE
+        listview.visibility = View.INVISIBLE
+    }
+
+    private fun renderDataState(dataState: PhotoViewState.DataState) {
+        loadingIndicator.visibility = View.INVISIBLE
+        listview.apply {
+            visibility = View.VISIBLE
+            adapter = DataClassPhotoAdapter(context, dataState.photos)
+        }
+    }
+
+    private fun renderErrorState(errorState: PhotoViewState.ErrorState) {
+        loadingIndicator.visibility = View.INVISIBLE
+        listview.visibility = View.INVISIBLE
+        Toast.makeText(this, "error ${errorState.error}", Toast.LENGTH_LONG).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        Debugging purposes
-//        Picasso.get().load("https://via.placeholder.com/150/771796").fit().into(imageView)
-
-        // @TODO: load DataClassPhoto/Photo from network (nisud here)
-        val responsePubObservable = ServiceGenerator
-            .createAPIService(RequestInterface::class.java, this)
-            .getPhotos()
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeOn(Schedulers.io())
-            .subscribe(
-                { listOfPhotos ->
-                    handleResponse(listofPhotos = listOfPhotos as ArrayList<Photo>)
-                },
-                { error -> handleError(error) }
-            )
-
-//        Sample data
-//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title A"))
-//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title B"))
-//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title C"))
-//        adapter = DataClassPhotoAdapter(this, listOfDataClassPhotos)
-//        listview.adapter = adapter
-
+        // @TODO: load DataClassPhoto/Photo from repository (nisud here)
+        // MVC architecture
     }
 
-    private fun handleResponse(listofPhotos: ArrayList<Photo>) {
+    private fun itemClickedListener(photo: DataClassPhoto?) {
 
-        adapter = DataClassPhotoAdapter(this, listofPhotos)
-        listview.adapter = adapter
+        val intent = Intent(this, AlbumActivity::class.java)
+        intent.putExtra("albumId", photo!!.albumId)
+        this!!.startActivity(intent)
+
+        val activity: Activity = this
+        activity.overridePendingTransition(R.anim.slide_in_from_right, R.anim.fade_out)
     }
 
-    private fun handleError(error: Throwable) {
-        Toast.makeText(this, "Error ${error.localizedMessage}", Toast.LENGTH_LONG).show()
-    }
-
-    class DataClassPhotoAdapter: BaseAdapter {
+    inner class DataClassPhotoAdapter: BaseAdapter {
 
         private var context: Context?= null
-        private var listOfPhotos = ArrayList<Photo>()
+        private var listOfPhotos = ArrayList<DataClassPhoto>()
 
-        constructor(context:Context, listOfDataClassPhoto: ArrayList<Photo>): super() {
+        constructor(context:Context, listOfDataClassPhoto: ArrayList<DataClassPhoto>): super() {
             this.context = context
             this.listOfPhotos = listOfDataClassPhoto
         }
@@ -88,20 +100,15 @@ class MainActivity : AppCompatActivity() {
             val picasso: Picasso = Picasso.get()
             picasso.isLoggingEnabled = true
 
-            picasso.load(photo.thumbnailUrl!!)
+            picasso.load(photo.url!!)
                 .resize(150, 150).centerCrop().into(thumbNail)
 
             title.text = photo.title!!
             albumId.text = "Album id: #${photo.albumId!!}"
 
-            photoView.setOnClickListener{
-                val intent = Intent(context, AlbumActivity::class.java)
-                intent.putExtra("albumId", photo.albumId)
-                context!!.startActivity(intent)
-
-                val activity: Activity = context as Activity
-                activity.overridePendingTransition(R.anim.slide_in_from_right, R.anim.fade_out)
-            }
+            photoView.clicks().map {
+                itemClickedListener(photo)
+            }.subscribe()
 
             return photoView
         }

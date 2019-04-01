@@ -3,7 +3,6 @@ package com.wineadvocate.bradixapp
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,12 +10,11 @@ import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import com.hannesdorfmann.mosby3.mvi.MviActivity
 import com.squareup.picasso.Picasso
+import com.wineadvocate.domain.AlbumViewState
 import com.wineadvocate.model.DataClassPhoto
-import com.wineadvocate.network.RequestInterface
-import com.wineadvocate.network.ServiceGenerator
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
@@ -24,39 +22,75 @@ import kotlinx.android.synthetic.main.activity_main.*
  */
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-class AlbumActivity : AppCompatActivity() {
+class AlbumActivity : MviActivity<AlbumsView, AlbumsPresenter>(), AlbumsView {
 
-    private var adapter: PhotoAdapter?= null
 
+    private var albumId: String? = null
+
+    override fun createPresenter() = AlbumsPresenter()
+
+    override fun loadAlbums(): Observable<String> = Observable.just(albumId)
+
+    override fun render(state: AlbumViewState) {
+
+        when(state) {
+            is AlbumViewState.LoadingState -> renderLoadingState()
+            is AlbumViewState.DataState -> renderDataState(state)
+            is AlbumViewState.ErrorState -> renderErrorState(state)
+        }
+    }
+
+    private fun renderLoadingState() {
+        loadingIndicator.visibility = View.VISIBLE
+        listview.visibility = View.INVISIBLE
+    }
+
+    private fun renderDataState(dataState: AlbumViewState.DataState) {
+        loadingIndicator.visibility = View.INVISIBLE
+        listview.apply {
+            visibility = View.VISIBLE
+            adapter = PhotoAdapter(context, dataState.albums)
+        }
+    }
+
+    private fun renderErrorState(errorState: AlbumViewState.ErrorState) {
+        loadingIndicator.visibility = View.INVISIBLE
+        listview.visibility = View.INVISIBLE
+        Toast.makeText(this, "error ${errorState.error}", Toast.LENGTH_LONG).show()
+    }
+
+    @SuppressLint("CheckResult")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val bundle: Bundle = intent.extras
-        val albumId:String = bundle.getString("albumId")
+        albumId = bundle.getString("albumId")
 
-        val responsePubObservable = ServiceGenerator
-            .createAPIService(RequestInterface::class.java, this)
-            .getAlbum(albumId)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeOn(Schedulers.io())
-            .subscribe(
-                { listOfDataClassPhotos ->
-                    handleResponse(listOfDataClassPhotos = listOfDataClassPhotos as ArrayList<DataClassPhoto>)
-                },
-                { error -> handleError(error) }
-            )
+// @TODO: MVC architecture design (nisud here)
+//        ServiceGenerator
+//            .createAPIService(RequestInterface::class.java)
+//            .getAlbum(albumId)
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribeOn(Schedulers.io())
+//            .subscribe(
+//                { listOfDataClassPhotos ->
+//                    handleResponse(listOfDataClassPhotos = listOfDataClassPhotos as ArrayList<DataClassPhoto>)
+//                },
+//                { error -> handleError(error) }
+//            )
+
     }
 
-    private fun handleResponse(listOfDataClassPhotos: ArrayList<DataClassPhoto>) {
-
-        adapter = PhotoAdapter(this, listOfDataClassPhotos)
-        listview.adapter = adapter
-    }
-
-    private fun handleError(error: Throwable) {
-        Toast.makeText(this, "Error ${error.localizedMessage}", Toast.LENGTH_LONG).show()
-    }
+//    private fun handleResponse(listOfDataClassPhotos: ArrayList<DataClassPhoto>) {
+//
+//        adapter = PhotoAdapter(this, listOfDataClassPhotos)
+//        listview.adapter = adapter
+//    }
+//
+//    private fun handleError(error: Throwable) {
+//        Toast.makeText(this, "Error ${error.localizedMessage}", Toast.LENGTH_LONG).show()
+//    }
 
 
     inner class PhotoAdapter: BaseAdapter {
