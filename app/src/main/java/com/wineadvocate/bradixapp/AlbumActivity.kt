@@ -14,7 +14,7 @@ import com.hannesdorfmann.mosby3.mvi.MviActivity
 import com.squareup.picasso.Picasso
 import com.wineadvocate.domain.AlbumViewState
 import com.wineadvocate.model.DataClassPhoto
-import io.reactivex.subjects.PublishSubject
+import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_album.*
 
 /**
@@ -25,11 +25,11 @@ import kotlinx.android.synthetic.main.activity_album.*
 class AlbumActivity : MviActivity<AlbumsView, AlbumsPresenter>(), AlbumsView {
 
 
-    private var albumId = PublishSubject.create<String>()
+    private var albumId: String? = null
 
     override fun createPresenter() = AlbumsPresenter()
 
-    override fun loadAlbums() = albumId
+    override fun loadAlbums(): Observable<String> = Observable.just(albumId)
 
     override fun render(state: AlbumViewState) {
 
@@ -65,7 +65,7 @@ class AlbumActivity : MviActivity<AlbumsView, AlbumsPresenter>(), AlbumsView {
         setContentView(R.layout.activity_album)
 
         val bundle: Bundle = intent.extras
-        albumId.onNext(bundle.getString("albumId"))
+        albumId = bundle.getString("albumId")
 
         // @TODO: MVC architecture design (nisud here)
 

@@ -1,9 +1,7 @@
 package com.wineadvocate.bradixapp
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -79,12 +77,14 @@ class MainActivity : MviActivity<PhotosView, PhotosPresenter>(), PhotosView {
 
     private fun itemClickedListener(photo: DataClassPhoto?) {
 
-        val intent = Intent(this, AlbumActivity::class.java)
-        intent.putExtra("albumId", photo!!.albumId)
-        this!!.startActivity(intent)
+//        val intent = Intent(this, AlbumActivity::class.java)
+//        intent.putExtra("albumId", photo!!.albumId)
+//        this!!.startActivity(intent)
+//
+//        val activity: Activity = this
+//        activity.overridePendingTransition(R.anim.slide_in_from_right, R.anim.fade_out)
 
-        val activity: Activity = this
-        activity.overridePendingTransition(R.anim.slide_in_from_right, R.anim.fade_out)
+        itemClickSubject.onNext(photo!!)
     }
 
     inner class DataClassPhotoAdapter: BaseAdapter {
