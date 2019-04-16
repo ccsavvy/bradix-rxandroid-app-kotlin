@@ -18,7 +18,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.wineadvocate.bradixapp"
-        buildConfigField 'String', 'AUTH_BASE_URL', '"https://jsonplaceholder.typicode.com/"'
+        buildConfigField 'String', 'BASE_URL', '"https://jsonplaceholder.typicode.com/"'
         minSdkVersion 17
         targetSdkVersion 28
         versionCode 1

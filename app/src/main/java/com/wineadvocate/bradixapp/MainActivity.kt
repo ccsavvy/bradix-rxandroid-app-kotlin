@@ -18,6 +18,7 @@ import com.squareup.picasso.Picasso
 import com.wineadvocate.domain.PhotoViewState
 import com.wineadvocate.model.DataClassPhoto
 import io.reactivex.Observable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -27,16 +28,25 @@ class MainActivity : MviActivity<PhotosView, PhotosPresenter>(), PhotosView {
 
     override fun createPresenter() = PhotosPresenter()
 
-    override fun showAlbumByIdIntent(albumId: String) = itemClickSubject
+    override fun showAlbumByIdIntent() = itemClickSubject
 
-    override fun showPhotos() = Observable.just(true)!!
+    override fun showPhotos(): Observable<Boolean> = Observable.just(true).subscribeOn(Schedulers.io())
 
     override fun render(state: PhotoViewState) {
 
-        when(state) {
-            is PhotoViewState.LoadingState -> renderLoadingState()
-            is PhotoViewState.DataState -> renderDataState(state)
-            is PhotoViewState.ErrorState -> renderErrorState(state)
+//        when(state) {
+//            is PhotoViewState.LoadingState -> renderLoadingState()
+//            is PhotoViewState.DataState -> renderDataState(state)
+//            is PhotoViewState.ErrorState -> renderErrorState(state)
+//        }
+
+
+        if(state.isLoading && state.error != null) {
+            renderErrorState(state)
+        } else if (state.isLoading && state.photos == null) {
+            renderLoadingState()
+        } else if (state.isLoading && state.photos != null) {
+            renderDataState(state)
         }
     }
 
@@ -45,15 +55,15 @@ class MainActivity : MviActivity<PhotosView, PhotosPresenter>(), PhotosView {
         listview.visibility = View.INVISIBLE
     }
 
-    private fun renderDataState(dataState: PhotoViewState.DataState) {
+    private fun renderDataState(dataState: PhotoViewState) {
         loadingIndicator.visibility = View.INVISIBLE
         listview.apply {
             visibility = View.VISIBLE
-            adapter = DataClassPhotoAdapter(context, dataState.photos)
+            adapter = dataState.photos?.let { DataClassPhotoAdapter(context, it) }
         }
     }
 
-    private fun renderErrorState(errorState: PhotoViewState.ErrorState) {
+    private fun renderErrorState(errorState: PhotoViewState) {
         loadingIndicator.visibility = View.INVISIBLE
         listview.visibility = View.INVISIBLE
         Toast.makeText(this, "error ${errorState.error}", Toast.LENGTH_LONG).show()

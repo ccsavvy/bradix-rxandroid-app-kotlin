@@ -16,7 +16,7 @@ interface PhotosView : MvpView {
      *
      */
 
-    fun showAlbumByIdIntent(albumId: String) : Observable<DataClassPhoto>
+    fun showAlbumByIdIntent() : Observable<DataClassPhoto>
 
     /*
      * Emits item from json response

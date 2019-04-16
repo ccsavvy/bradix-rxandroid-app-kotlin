@@ -1,6 +1,5 @@
 package com.wineadvocate.repository
 
-import android.util.Log
 import com.google.gson.GsonBuilder
 import com.wineadvocate.bradixapp.BuildConfig
 import okhttp3.OkHttpClient
@@ -8,6 +7,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 /**
@@ -28,17 +28,19 @@ object ServiceGenerator {
         .create()
 
     private val apiBuilder = Retrofit.Builder()
-        .baseUrl(BuildConfig.AUTH_BASE_URL)
+        .baseUrl(BuildConfig.BASE_URL)
         .addConverterFactory(GsonConverterFactory.create(gson))
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
 
 
     fun <S> createAPIService(serviceClass: Class<S>): S {
 
-        val interceptor = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger { message -> Log.d("OkHttp", message) })
+        val interceptor = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger { message -> Timber.d(
+            "OkHttp$message"
+        ) })
 
         interceptor.level = HttpLoggingInterceptor.Level.HEADERS
-        // here I checked if Okhttpclient is null, create new. otherwise, use existing.
+        // here I checked if OkHttp client is null, create new. otherwise, use existing.
         if (apiHttpClient == null) {
             apiHttpClient = OkHttpClient.Builder()
         }
@@ -47,6 +49,7 @@ object ServiceGenerator {
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)
+            .addInterceptor(interceptor)
 
 
         // here I checked if retrofit is null, create new. otherwise, use existing.
