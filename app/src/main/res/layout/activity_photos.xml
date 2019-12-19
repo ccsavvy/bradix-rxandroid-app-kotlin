@@ -25,24 +25,23 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/_album_title"
+                android:id="@+id/albumTitleLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="5pt"
-                android:paddingRight="5pt"
                 android:paddingTop="5pt"
+                android:paddingRight="5pt"
                 android:text="Album title" />
 
             <TextView
-                android:id="@+id/_album_id"
+                android:id="@+id/userIdLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingLeft="5pt"
-                android:paddingRight="5pt"
                 android:paddingTop="2pt"
+                android:paddingRight="5pt"
                 android:text="Album: #" />
         </LinearLayout>
 
     </LinearLayout>
-
 </LinearLayout>

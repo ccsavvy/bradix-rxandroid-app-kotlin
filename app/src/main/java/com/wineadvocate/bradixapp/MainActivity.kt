@@ -1,30 +1,26 @@
 package com.wineadvocate.bradixapp
 
-import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import com.squareup.picasso.Picasso
-import com.wineadvocate.model.Photo
+import com.wineadvocate.model.Album
 import com.wineadvocate.network.RequestInterface
 import com.wineadvocate.network.ServiceGenerator
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 
+
 class MainActivity : AppCompatActivity() {
 
-    // private var listOfDataClassPhotos = ArrayList<Photo>()
-    private var adapter:DataClassPhotoAdapter?= null
+    private val disposable: CompositeDisposable = CompositeDisposable()
+    private var adapter: DataClassAlbumAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,81 +29,70 @@ class MainActivity : AppCompatActivity() {
 //        Debugging purposes
 //        Picasso.get().load("https://via.placeholder.com/150/771796").fit().into(imageView)
 
-        // @TODO: load DataClassPhoto/Photo from network (nisud here)
+        // @TODO: load DataClassAlbum/Album from network (nisud here)
         val responsePubObservable = ServiceGenerator
             .createAPIService(RequestInterface::class.java, this)
-            .getPhotos()
+            .getAlbum()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeOn(Schedulers.io())
             .subscribe(
-                { listOfPhotos ->
-                    handleResponse(listofPhotos = listOfPhotos as ArrayList<Photo>)
+                { listOfAlbums ->
+                    handleResponse(listofAlbums = listOfAlbums as ArrayList<Album>)
                 },
                 { error -> handleError(error) }
             )
 
+        disposable.add(responsePubObservable)
+
 //        Sample data
-//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title A"))
-//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title B"))
-//        listOfDataClassPhotos.add(Photo("https://via.placeholder.com/150/92c952", "Title C"))
-//        adapter = DataClassPhotoAdapter(this, listOfDataClassPhotos)
+//        listOfDataClassAlbums.add(Album("https://via.placeholder.com/150/92c952", "Title A"))
+//        listOfDataClassAlbums.add(Album("https://via.placeholder.com/150/92c952", "Title B"))
+//        listOfDataClassAlbums.add(Album("https://via.placeholder.com/150/92c952", "Title C"))
+//        adapter = DataClassAlbumAdapter(this, listOfDataClassAlbums)
 //        listview.adapter = adapter
 
     }
 
-    private fun handleResponse(listofPhotos: ArrayList<Photo>) {
+    override fun onPause() {
+        super.onPause()
+        disposable.clear()
+    }
 
-        adapter = DataClassPhotoAdapter(this, listofPhotos)
-        listview.adapter = adapter
+    private fun handleResponse(listofAlbums: ArrayList<Album>) {
+
+        adapter = DataClassAlbumAdapter(this, listofAlbums)
+        albumList.adapter = adapter
     }
 
     private fun handleError(error: Throwable) {
         Toast.makeText(this, "Error ${error.localizedMessage}", Toast.LENGTH_LONG).show()
     }
 
-    class DataClassPhotoAdapter: BaseAdapter {
+    class DataClassAlbumAdapter(context: Context, listOfDataClassAlbum: ArrayList<Album>) :
+        BaseAdapter() {
 
-        private var context: Context?= null
-        private var listOfPhotos = ArrayList<Photo>()
+        private var context: Context? = context
+        private var listOfAlbums = listOfDataClassAlbum
 
-        constructor(context:Context, listOfDataClassPhoto: ArrayList<Photo>): super() {
-            this.context = context
-            this.listOfPhotos = listOfDataClassPhoto
-        }
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
 
-        @SuppressLint("ViewHolder", "SetTextI18n")
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-
-            val photo = listOfPhotos[position]
-            var photoView = LayoutInflater.from(context).inflate(R.layout.photos, parent, false)
-
-            val thumbNail = photoView.findViewById(R.id._thumb_nail) as ImageView
-            val title = photoView.findViewById(R.id._album_title) as TextView
-            val albumId = photoView.findViewById<TextView>(R.id._album_id)
-
-            val picasso: Picasso = Picasso.get()
-            picasso.isLoggingEnabled = true
-
-            picasso.load(photo.thumbnailUrl!!)
-                .resize(150, 150).centerCrop().into(thumbNail)
-
-            title.text = photo.title!!
-            albumId.text = "Album id: #${photo.albumId!!}"
-
-            photoView.setOnClickListener{
-                val intent = Intent(context, AlbumActivity::class.java)
-                intent.putExtra("albumId", photo.albumId)
-                context!!.startActivity(intent)
-
-                val activity: Activity = context as Activity
-                activity.overridePendingTransition(R.anim.slide_in_from_right, R.anim.fade_out)
+            val albumViewHolder: AlbumViewHolder
+            if (convertView == null) {
+                albumViewHolder = AlbumViewHolder()
+                albumViewHolder.position = position
+                convertView?.tag = albumViewHolder
+            } else {
+                albumViewHolder = convertView.tag as AlbumViewHolder
             }
 
-            return photoView
+            albumViewHolder.albumTitle?.text = listOfAlbums[position].title
+            albumViewHolder.userId?.text = listOfAlbums[position].userId
+            albumViewHolder.position = position
+            return convertView
         }
 
         override fun getItem(position: Int): Any {
-            return listOfPhotos[position]
+            return listOfAlbums[position]
         }
 
         override fun getItemId(position: Int): Long {
@@ -115,7 +100,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun getCount(): Int {
-            return listOfPhotos.size
+            return listOfAlbums.size
         }
+    }
+
+    internal class AlbumViewHolder {
+        val albumTitle: TextView? = null
+        val userId: TextView? = null
+        var position: Int = 0
     }
 }

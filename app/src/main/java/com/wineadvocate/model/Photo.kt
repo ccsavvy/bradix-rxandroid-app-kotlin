@@ -1,13 +1,13 @@
 package com.wineadvocate.model
 
 /**
- *  Created by Christian on Wednesday Mar, 2019
+ *  Created by Christian on Thursday Mar, 2019
  */
 
-class Photo(title: String, thumbnailUrl: String, albumId: String) {
-
-    var title: String?= title
-    var thumbnailUrl: String? = thumbnailUrl
-    var albumId: String? = albumId
-
-}
+data class Photo(
+    val albumId: String,
+    val id: String,
+    val title: String,
+    val url: String,
+    val thumbnailUrl: String
+)

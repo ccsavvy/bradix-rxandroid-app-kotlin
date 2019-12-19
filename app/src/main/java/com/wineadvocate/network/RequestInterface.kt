@@ -1,8 +1,9 @@
 package com.wineadvocate.network
 
-import com.wineadvocate.model.DataClassPhoto
+import com.wineadvocate.model.Album
 import com.wineadvocate.model.Photo
 import io.reactivex.Observable
+import io.reactivex.Single
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -13,8 +14,8 @@ import retrofit2.http.Query
 interface RequestInterface {
 
     @GET("/photos")
-    fun getPhotos() : Observable<ArrayList<Photo>>
+    fun getPhotos(@Query("albumId") albumId: String) : Observable<ArrayList<Photo>>
 
-    @GET("/photos")
-    fun getAlbum(@Query("albumId") albumId : String) : Observable<ArrayList<DataClassPhoto>>
+    @GET("/albums")
+    fun getAlbum(@Query("userId") userId: String) : Single<ArrayList<Album>>
 }

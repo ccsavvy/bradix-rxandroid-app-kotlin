@@ -1,7 +1,7 @@
 package com.wineadvocate.bradixapp
 
-import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
@@ -12,10 +12,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.squareup.picasso.Picasso
-import com.wineadvocate.model.DataClassPhoto
+import com.wineadvocate.model.Photo
 import com.wineadvocate.network.RequestInterface
 import com.wineadvocate.network.ServiceGenerator
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -23,9 +24,9 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  Created by Christian on Tuesday Mar, 2019
  */
 
-@Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class AlbumActivity : AppCompatActivity() {
 
+    private val disposable: CompositeDisposable = CompositeDisposable()
     private var adapter: PhotoAdapter?= null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,48 +38,54 @@ class AlbumActivity : AppCompatActivity() {
 
         val responsePubObservable = ServiceGenerator
             .createAPIService(RequestInterface::class.java, this)
-            .getAlbum(albumId)
+            .getPhotos("2")
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeOn(Schedulers.io())
             .subscribe(
                 { listOfDataClassPhotos ->
-                    handleResponse(listOfDataClassPhotos = listOfDataClassPhotos as ArrayList<DataClassPhoto>)
+                    handleResponse(listOfPhotos = listOfDataClassPhotos as ArrayList<Photo>)
                 },
                 { error -> handleError(error) }
             )
+
+        disposable.add(responsePubObservable)
     }
 
-    private fun handleResponse(listOfDataClassPhotos: ArrayList<DataClassPhoto>) {
+    private fun handleResponse(listOfPhotos: ArrayList<Photo>) {
 
-        adapter = PhotoAdapter(this, listOfDataClassPhotos)
-        listview.adapter = adapter
+        adapter = PhotoAdapter(this, listOfPhotos)
+        albumList.adapter = adapter
     }
 
     private fun handleError(error: Throwable) {
         Toast.makeText(this, "Error ${error.localizedMessage}", Toast.LENGTH_LONG).show()
     }
 
+    override fun onPause() {
+        super.onPause()
+        disposable.clear()
+    }
 
     inner class PhotoAdapter: BaseAdapter {
 
         private var context: Context? = null
-        private var listOfDataClassPhotos = ArrayList<DataClassPhoto>()
+        private var listOfDataClassPhotos = ArrayList<Photo>()
 
-        constructor(context: Context, listOfDataClassPhoto: ArrayList<DataClassPhoto>): super() {
+        constructor(context: Context, listOfPhoto: ArrayList<Photo>): super() {
 
             this.context = context
-            this.listOfDataClassPhotos = listOfDataClassPhoto
+            this.listOfDataClassPhotos = listOfPhoto
         }
 
-        @SuppressLint("ViewHolder", "SetTextI18n")
+
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 
             val photo = listOfDataClassPhotos[position]
-            var photoView = LayoutInflater.from(context).inflate(R.layout.photos, parent, false)
+            var photoView = LayoutInflater.from(context).inflate(R.layout.item_album, parent, false)
 
             val thumbNail = photoView.findViewById(R.id._thumb_nail) as ImageView
-            val title = photoView.findViewById(R.id._album_title) as TextView
-            val albumId = photoView.findViewById<TextView>(R.id._album_id)
+            val title = photoView.findViewById(R.id.albumTitleLabel) as TextView
+            val albumId = photoView.findViewById<TextView>(R.id.userIdLabel)
 
             val picasso: Picasso = Picasso.get()
             picasso.isLoggingEnabled = true
