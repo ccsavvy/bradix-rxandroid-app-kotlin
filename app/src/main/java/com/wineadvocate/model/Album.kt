@@ -1,5 +1,7 @@
 package com.wineadvocate.model
 
+import com.google.gson.annotations.SerializedName
+
 /*
     userIdLabel": 1,
     "id": 1,

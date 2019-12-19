@@ -34,14 +34,15 @@ object ServiceGenerator {
         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
 
 
-    fun <S> createAPIService(serviceClass: Class<S>, context: Context): S {
+    fun <S> createAPIService(serviceClass: Class<S>): S {
 
-        val interceptor = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger { message -> Log.d("OkHttp", message) })
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
 
-        interceptor.level = HttpLoggingInterceptor.Level.HEADERS
+        // HttpLoggingInterceptor.Logger { message -> Log.d("OkHttp", message) }
         // here I checked if Okhttpclient is null, create new. otherwise, use existing.
         if (apiHttpClient == null) {
-            apiHttpClient = OkHttpClient.Builder()
+            apiHttpClient = OkHttpClient.Builder().addInterceptor(interceptor)
         }
 
         apiHttpClient!!
@@ -58,5 +59,4 @@ object ServiceGenerator {
 
         return apiRetrofit!!.create(serviceClass)
     }
-
 }

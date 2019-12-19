@@ -1,13 +1,15 @@
 package com.wineadvocate.bradixapp
 
+import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.wineadvocate.model.Album
 import com.wineadvocate.network.RequestInterface
 import com.wineadvocate.network.ServiceGenerator
@@ -16,11 +18,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 
-
 class MainActivity : AppCompatActivity() {
 
     private val disposable: CompositeDisposable = CompositeDisposable()
-    private var adapter: DataClassAlbumAdapter? = null
+    private var adapter: AlbumAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,27 +30,29 @@ class MainActivity : AppCompatActivity() {
 //        Debugging purposes
 //        Picasso.get().load("https://via.placeholder.com/150/771796").fit().into(imageView)
 
-        // @TODO: load DataClassAlbum/Album from network (nisud here)
+        // @TODO: load DataClassAlbum/Album from network
         val responsePubObservable = ServiceGenerator
-            .createAPIService(RequestInterface::class.java, this)
-            .getAlbum()
+            .createAPIService(RequestInterface::class.java)
+            .getAlbums("2")
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeOn(Schedulers.io())
             .subscribe(
                 { listOfAlbums ->
-                    handleResponse(listofAlbums = listOfAlbums as ArrayList<Album>)
+                    handleResponse(listOfAlbums = listOfAlbums)
                 },
                 { error -> handleError(error) }
             )
 
         disposable.add(responsePubObservable)
+        refreshLayout.setOnRefreshListener { refreshLayout.isRefreshing = false }
+
 
 //        Sample data
 //        listOfDataClassAlbums.add(Album("https://via.placeholder.com/150/92c952", "Title A"))
 //        listOfDataClassAlbums.add(Album("https://via.placeholder.com/150/92c952", "Title B"))
 //        listOfDataClassAlbums.add(Album("https://via.placeholder.com/150/92c952", "Title C"))
-//        adapter = DataClassAlbumAdapter(this, listOfDataClassAlbums)
-//        listview.adapter = adapter
+//        adapter = AlbumAdapter(this, listOfDataClassAlbums)
+//        listView.adapter = adapter
 
     }
 
@@ -58,9 +61,10 @@ class MainActivity : AppCompatActivity() {
         disposable.clear()
     }
 
-    private fun handleResponse(listofAlbums: ArrayList<Album>) {
+    private fun handleResponse(listOfAlbums: List<Album>) {
 
-        adapter = DataClassAlbumAdapter(this, listofAlbums)
+        listOfAlbums.forEach(System.out::println)
+        adapter = AlbumAdapter(applicationContext, listOfAlbums)
         albumList.adapter = adapter
     }
 
@@ -68,27 +72,32 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Error ${error.localizedMessage}", Toast.LENGTH_LONG).show()
     }
 
-    class DataClassAlbumAdapter(context: Context, listOfDataClassAlbum: ArrayList<Album>) :
-        BaseAdapter() {
+    class AlbumAdapter(context: Context, list: List<Album>) : BaseAdapter() {
 
-        private var context: Context? = context
-        private var listOfAlbums = listOfDataClassAlbum
-
+        private val context: Context = context
+        private var listOfAlbums = list
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
 
+            var view: View? = convertView
             val albumViewHolder: AlbumViewHolder
             if (convertView == null) {
-                albumViewHolder = AlbumViewHolder()
-                albumViewHolder.position = position
-                convertView?.tag = albumViewHolder
-            } else {
-                albumViewHolder = convertView.tag as AlbumViewHolder
-            }
+                val mInflater =
+                    context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
-            albumViewHolder.albumTitle?.text = listOfAlbums[position].title
-            albumViewHolder.userId?.text = listOfAlbums[position].userId
+                view = mInflater.inflate(R.layout.item_album, null)
+                albumViewHolder = AlbumViewHolder()
+                albumViewHolder.albumTitle = view.findViewById(R.id.albumTitle) //?.text = listOfAlbums[position].title
+                albumViewHolder.userId = view.findViewById(R.id.userId) //?.text = listOfAlbums[position].userId
+                albumViewHolder.position = position
+                view?.tag = albumViewHolder
+            } else albumViewHolder = view?.tag as AlbumViewHolder
+
+
+            val album: Album = getItem(position) as Album
+            albumViewHolder.albumTitle?.text = album.title
+            albumViewHolder.userId?.text = album.userId
             albumViewHolder.position = position
-            return convertView
+            return view
         }
 
         override fun getItem(position: Int): Any {
@@ -105,8 +114,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     internal class AlbumViewHolder {
-        val albumTitle: TextView? = null
-        val userId: TextView? = null
+        var albumTitle: TextView? = null
+        var userId: TextView? = null
         var position: Int = 0
     }
 }
