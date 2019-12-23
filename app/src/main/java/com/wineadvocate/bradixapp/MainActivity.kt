@@ -2,6 +2,7 @@ package com.wineadvocate.bradixapp
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -64,7 +65,7 @@ class MainActivity : AppCompatActivity() {
     private fun handleResponse(listOfAlbums: List<Album>) {
 
         listOfAlbums.forEach(System.out::println)
-        adapter = AlbumAdapter(applicationContext, listOfAlbums)
+        adapter = AlbumAdapter(this, listOfAlbums)
         albumList.adapter = adapter
     }
 
@@ -97,6 +98,17 @@ class MainActivity : AppCompatActivity() {
             albumViewHolder.albumTitle?.text = album.title
             albumViewHolder.userId?.text = album.userId
             albumViewHolder.position = position
+
+            view?.setOnClickListener {
+                val intent = Intent(context, PhotoActivity::class.java)
+                intent.putExtra("albumId", album.userId)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
+
+                val activity: Activity = context as Activity
+                activity.overridePendingTransition(R.anim.slide_in_from_right, R.anim.fade_out)
+            }
+
             return view
         }
 
